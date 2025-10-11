@@ -34,7 +34,7 @@ def get_prompters() -> dict[str, T.Callable[[T.Any], Prompter]]:
         "gpt-v2-no-error-fixing": lambda cmd_args: GptV2AblatedPrompter(cmd_args, with_error_fixing=False),
         "gpt-v2-ablated": \
             lambda cmd_args: GptV2AblatedPrompter(cmd_args,
-                with_coverage=False, with_get_info=False, with_imports=False, with_error_fixing=False),
+                with_coverage=True, with_get_info=True, with_imports=True, with_error_fixing=True),
         "claude": ClaudePrompter
     }
 
@@ -73,34 +73,36 @@ def parse_args(args=None):
             return "anthropic/claude-3-sonnet-20240229"
         if 'AWS_ACCESS_KEY_ID' in os.environ:
             return "anthropic.claude-3-5-sonnet-20241022-v2:0"
+        if 'DEEPSEEK_API_KEY' in os.environ:
+            return "deepseek/deepseek-reasoner"
 
     ap.add_argument('--model', type=str, default=default_model(),
                     help='OpenAI model to use')
 
     ap.add_argument('--prompt', '--prompt-family', type=str,
                     choices=list(prompter_registry.keys()),
-                    default='gpt-v2',
+                    default='gpt-v2-ablated',
                     help='Prompt style to use')
 
-    ap.add_argument('--ollama-api-base', type=str, default="http://localhost:11434",
+    ap.add_argument('--ollama-api-base', type=str, default="https://api.deepseek.com/v1",
                     help='"api_base" setting for Ollama models')
 
     ap.add_argument('--bedrock-anthropic-version', type=str, default="bedrock-2023-05-31",
                     help='"anthropic_version" setting for bedrock Anthropic models')
 
-    ap.add_argument('--model-temperature', type=float, default=0,
+    ap.add_argument('--model-temperature', type=float, default=0.2,
                     help='Model "temperature" to use')
 
-    ap.add_argument('--line-limit', type=int, default=50,
+    ap.add_argument('--line-limit', type=int, default=80,
                     help='attempt to keep code segment(s) at or below this limit')
 
     ap.add_argument('--rate-limit', type=int,
                     help='max. tokens/minute to send in prompts')
 
-    ap.add_argument('--max-attempts', type=int, default=3,
+    ap.add_argument('--max-attempts', type=int, default=20,
                     help='max. number of prompt attempts for a code segment')
 
-    ap.add_argument('--max-backoff', type=int, default=64,
+    ap.add_argument('--max-backoff', type=int, default=640,
                     help='max. number of seconds for backoff interval')
 
     ap.add_argument('--dry-run', default=False,
@@ -361,7 +363,7 @@ def install_missing_imports(args: argparse.Namespace, seg: CodeSegment, modules:
         try:
             # FIXME we probably want to limit the module(s) installed to an "approved" list
             p = subprocess.run((f"{sys.executable} -m pip install {module}").split(),
-                               check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60)
+                               check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=600)
             version = importlib.metadata.version(module)
             module_available[module] = 2    # originally unavailable, but now added
             print(f"Installed module {module} {version}")

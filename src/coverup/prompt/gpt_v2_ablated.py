@@ -26,7 +26,11 @@ class GptV2AblatedPrompter(GptV2Prompter):
 
         return [
             mk_message(f"""
-You are an expert Python test-driven developer.
+You are an expert Python test-driven developer, specializing in computer architecture and numerical analysis.
+You have an extensive research background, with multiple publications across diverse fields including distributed machine learning systems and natural language processing.
+You possess strong communication and teamwork skills, enabling effective collaboration with cross-functional teams (R&D, algorithms, testing) to achieve efficient task completion.
+You demonstrate intense curiosity and a drive for continuous learning, consistently challenging yourself to trace technical implementations to their foundational principles.
+Your work emphasizes code quality, performance optimization, and engineering best practices.
 """ + (f"""\
 The code below, extracted from {filename}, does not achieve full coverage:
 when tested, {segment.lines_branches_missing_do()} not execute.
@@ -48,6 +52,8 @@ Respond ONLY with the Python code enclosed in backticks, without any explanation
 ```python
 {segment.get_excerpt(tag_lines=self.with_coverage, add_imports=self.with_imports)}
 ```
+
+Given the complexity of the requirements, employ extensive intermediate steps to facilitate systematic derivation.
 """)
         ]
 

@@ -24,7 +24,7 @@ async def measure_test_coverage(*, test: str, tests_dir: Path, pytest_args='',
                                           '-m', 'pytest', *pytest_args.split(),
                                           *(('--isolate',) if isolate_tests else ()),
                                           '-qq', '-x', '--disable-warnings', t.name],
-                                         check=True, timeout=60)
+                                         check=True, timeout=600)
                 if log_write:
                     log_write(str(p.stdout, 'UTF-8', errors='ignore'))
 

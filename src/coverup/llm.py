@@ -1,3 +1,4 @@
+import os
 import typing as T
 import openai
 import logging
@@ -103,7 +104,7 @@ class Chatter:
 
         self._model = model
         self._model_temperature: float | None = None
-        self._max_backoff = 64 # seconds
+        self._max_backoff = 640 # seconds
         self.token_rate_limit: AsyncLimiter | None
         self.set_token_rate_limit(token_rate_limit_for_model(model))
         self._add_cost = lambda cost: None
@@ -117,8 +118,9 @@ class Chatter:
     @staticmethod
     def _validate_model(model) -> None:
         try:
-            _, provider, _, _ = litellm.get_llm_provider(model)
-        except litellm.exceptions.BadRequestError:
+            _, provider, _, _ = litellm.get_llm_provider(model, api_base="https://api.deepseek.com/v1", api_key=os.environ["DEEPSEEK_API_KEY"])
+        except litellm.exceptions.BadRequestError as e:
+            print(e)
             raise ChatterError(textwrap.dedent("""
                 Unknown or unsupported model.
                 Please see https://docs.litellm.ai/docs/providers for supported models."""))
